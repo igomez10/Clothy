@@ -3,8 +3,10 @@ import {
   AlertIOS,
   AppRegistry,
   StyleSheet,
+  Button,
   Text,
   View,
+  Linking,
   Dimensions,
   ImagePickerIOS,
   Image,
@@ -27,15 +29,47 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-    this.state = { ventana: 'camara', fuente: null, image: '', recommendations: [] }
+
+    const recommendations = [
+      {
+        'id': 1,
+        'title': 'Tshirt 1',
+        'store': 'Zara',
+        'price': 30,
+        'buy_url': 'https://www.zara.com/us/',
+        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
+        'currency': 'USD'
+      },
+      {
+        'id': 2,
+        'title': 'Tshirt 2',
+        'store': 'Zara',
+        'price': 14,
+        'buy_url': 'https://www.zara.com/us/',
+        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
+        'currency': 'USD'
+      },
+      {
+        'id': 3,
+        'title': 'Tshirt 3',
+        'store': 'Tennis',
+        'price': 22,
+        'buy_url': 'https://www.zara.com/us/',
+        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
+        'currency': 'USD'
+      }
+    ]
+
+    this.state = { view: 'list', recommendations: recommendations }
+    this.takePicture = this.takePicture.bind(this);
+    this.uploadPicture = this.uploadPicture.bind(this);
+    this.openBuy = this.openBuy.bind(this);
   }
 
-  sendPicture() {
-    let source = { uri: response.uri };
-    let imgData = response.data;
-    let imgName = response.fileName;
-    this.setState({ fuente: source });
-
+  sendPicture(imageUri) {
+    this.setState({view: 'list'});
+    console.log('Sending pic: ' + imageUri);
+    /*
     fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
       method: 'POST',
       headers: {
@@ -52,6 +86,7 @@ export default class Clothy extends Component {
       this.setState({ recommendations: body.recommendations})
     })
     .catch((err) => (console.log(err)))
+    */
   }
 
   takePicture() {
@@ -60,28 +95,31 @@ export default class Clothy extends Component {
         AlertIOS.alert('Can\'t use camera', 'We invite you to upload a pic ☺️');
         return;
       }
-
-      ImagePickerIOS.openCameraDialog({}, imageUri => {
-        console.log(imageUri);
-      }, error => {
-        console.log(error);
-      });
-    })
-  }
-
-  uploadPicture() {
-    ImagePickerIOS.openSelectDialog({}, imageUri => {
-      console.log(imageUri);
-    }, error => {
-      console.log(error);
+      ImagePickerIOS.openCameraDialog({}, imageUri => this.sendPicture(imageUri), () => {});
     });
   }
 
-  showCommunity() {
-    console.log('ioasdjaiodjas');
+  uploadPicture() {
+    ImagePickerIOS.openSelectDialog({}, imageUri => this.sendPicture(imageUri), () => {});
   }
 
-  render() {
+  showCommunity() {
+    AlertIOS.alert('Not implemented', 'Wait for this in the next version ☺️');
+  }
+
+  askCommunity() {
+    AlertIOS.alert('Not implemented', 'Wait for this in the next version ☺️');
+  }
+
+  openBuy(item) {
+    return () => {
+      Linking.openURL(item.buy_url).catch(err => {
+        AlertIOS.alert('An error occurred', err);
+      });
+    }
+  }
+
+  index() {
     return (
       <View style={styles.container}>
 
@@ -107,7 +145,11 @@ export default class Clothy extends Component {
 
           <View>
 
-            <Image source={require('./img/upload.png')} style={styles.uploadImage} />
+            <View src={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+              
+              <Image source={require('./img/upload.png')} style={styles.uploadImage} />
+            
+            </View>
 
             <Text style={styles.uploadText}>
               Upload a picture
@@ -121,7 +163,11 @@ export default class Clothy extends Component {
 
           <View>
 
-            <Image source={require('./img/camera.png')} style={styles.photoImage} />
+            <View src={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+              
+              <Image source={require('./img/camera.png')} style={styles.photoImage} />
+            
+            </View>
 
             <Text style={styles.photoText}>
               Take a photo
@@ -156,6 +202,105 @@ export default class Clothy extends Component {
       </View>
     );
   }
+
+  list() {
+    const recommendations = this.state.recommendations.map(item => {
+      return (
+        <View key={item.id + ''} style={styles.itemContainer}>
+
+          <View style={{flex: 1.4}}>
+
+            <Image style={{width: '100%', height: 123}} source={{uri: item.img_url}} />
+
+          </View>
+
+          <View style={{flex: 3, marginLeft: 10}}>
+          
+            <Text style={styles.itemText}>{item.title}</Text>
+
+            <Text style={styles.itemText}>{item.store}</Text>
+
+            <Text style={styles.itemText}>${item.price} {item.currency}</Text>
+
+            <Text style={styles.itemUrl} onPress={this.openBuy(item)}>
+              Go to the website
+            </Text>
+
+          </View>
+
+        </View>
+      );
+    });
+
+    return (
+      <View style={styles.container}>
+
+        <View style={styles.navbar}>
+
+          <View style={{flex: 1}}>
+
+            <Image source={require('./img/logo.png')} style={styles.logoImage} />
+
+          </View>
+
+          <View style={{flex: 1.2}}>
+
+            <Text style={styles.logoText}>
+              Clothy
+            </Text>
+
+          </View>
+
+        </View>
+
+        <View style={styles.headerContainer}>
+
+          <Text style={styles.headerTitle}>
+            Our Recommendations
+          </Text>
+
+        </View>
+
+        <View style={{flex: 457/667}}>
+
+          {recommendations}
+
+        </View>
+
+        <TouchableHighlight onPress={this.askCommunity} style={styles.helpContainer} underlayColor='#232323'>
+
+          <View style={{flexDirection: 'row'}}>
+
+            <View style={{flex: 7}}>
+
+              <Text style={styles.helpText}>
+                No results? Ask the community!
+              </Text>
+
+            </View>
+
+            <View style={{flex: 1}}>
+
+              <Image source={require('./img/right.png')} style={styles.helpImage} />
+
+            </View>
+
+          </View>
+
+        </TouchableHighlight>
+
+      </View>
+    );
+  }
+
+  render() {
+    if (this.state.view === 'index') {
+      return this.index();
+    } else { // if (this.state.view === 'list') {
+      return this.list();
+    }
+  }
+
 }
 
 const styles = StyleSheet.create({
@@ -190,7 +335,7 @@ const styles = StyleSheet.create({
     height: 146,
     width: 146,
     marginTop: 25,
-    marginLeft: 115
+    alignSelf: 'center'
   },
   uploadText: {
     textAlign: 'center',
@@ -208,7 +353,7 @@ const styles = StyleSheet.create({
     height: 146,
     width: 146,
     marginTop: 25,
-    marginLeft: 115
+    alignSelf: 'center'
   },
   photoText: {
     textAlign: 'center',
@@ -234,7 +379,39 @@ const styles = StyleSheet.create({
     height: 28,
     width: 28,
     marginTop: 16,
-    marginRight: 25
+    marginRight: 25,
+  },
+
+  headerContainer: {
+    flex: 62/667,
+    backgroundColor: '#FFFFFF'
+  },
+  headerTitle: {
+    color: '#95989A',
+    fontSize: 26,
+    marginTop: 15,
+    marginLeft: 20,
+    fontFamily: 'American Typewriter'
+  },
+
+  itemContainer: {
+    marginLeft: 20,
+    marginRight: 20,
+    marginBottom: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    backgroundColor: '#EFEFEF'
+  },
+  itemText: {
+    color: '#95989A',
+    fontSize: 18,
+    marginBottom: 5
+  },
+  itemUrl: {
+    color: '#F15F67',
+    fontSize: 18,
+    marginTop: 16
   }
 });
 
