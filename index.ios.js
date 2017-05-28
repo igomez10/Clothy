@@ -28,14 +28,18 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-    this.state = { ventana: 'camara', fuente: null, image: '' }
+    this.state = { ventana: 'camara', fuente: null, image: '', recommendations: [] }
   }
 
   takePicture() {
     this.camera.capture()
-      .then((data) => {} )
+      .then((data) => { })
       .catch(err => console.error(err));
   }
+  // componentWillMount() {
+  //   CameraRoll.getPhotos({ first: 5 }).then((response) => (console.log(response))).catch((err) => (console.log(err)))
+  // }
+
 
   uploadPicture() {
     ImagePicker.showImagePicker(options, (response) => {
@@ -50,10 +54,9 @@ export default class Clothy extends Component {
         let source = { uri: response.uri };
         let imgData = response.data;
         let imgName = response.fileName;
-        console.log(imgName);
         this.setState({ fuente: source });
 
-        fetch('http://10.105.168.100:5000/recommend', {
+        fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
@@ -63,7 +66,12 @@ export default class Clothy extends Component {
             img: imgData,
             img_key: imgName,
           })
-        }).then((serverResponse) => (console.log(serverResponse)))
+        })
+          .then((serverResponse) => {
+            let body = JSON.parse(serverResponse._bodyText);
+            this.setState({ recommendations: body.recommendations})
+          })
+          .catch((err) => (console.log(err)))
       }
     });
 
@@ -81,8 +89,8 @@ export default class Clothy extends Component {
           }}
           style={styles.preview}
           aspect={Camera.constants.Aspect.fill}>
-          <Text style={{ marginTop: 20, fontSize: 30, top: -180, color:'white', backgroundColor:'transparent' }}>
-            Clothy
+          <Text style={{ marginTop: 20, fontSize: 30, top: -180, color: 'white', backgroundColor: 'transparent' }}>
+            Clothy {this.state.recommendations.length}
         </Text>
           <Image
             style={{ width: 300, height: 300, top: -80 }}
@@ -91,6 +99,7 @@ export default class Clothy extends Component {
           <View style={{ flexDirection: 'row' }}>
             <Text style={styles.capture} onPress={this.takePicture.bind(this)}><Icon name="camera" size={30} color="black" /></Text>
             <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}><Icon name="image" size={30} color="black" /></Text>
+            <Text onPress={this.lastPicture} >Ultima</Text>
           </View>
         </Camera>
       </View >
