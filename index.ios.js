@@ -11,7 +11,8 @@ import {
   ImagePickerIOS,
   Image,
   CameraRoll,
-  TouchableHighlight
+  TouchableHighlight,
+  ImageStore,
 } from 'react-native';
 
 import Camera from 'react-native-camera';
@@ -29,62 +30,11 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-    const recommendations = [
-      {
-        'id': 1,
-        'title': 'Tshirt 1',
-        'store': 'Zara',
-        'price': 30,
-        'buy_url': 'https://www.zara.com/us/',
-        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
-        'currency': 'USD'
-      },
-      {
-        'id': 2,
-        'title': 'Tshirt 2',
-        'store': 'Zara',
-        'price': 14,
-        'buy_url': 'https://www.zara.com/us/',
-        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
-        'currency': 'USD'
-      },
-      {
-        'id': 3,
-        'title': 'Tshirt 3',
-        'store': 'Tennis',
-        'price': 22,
-        'buy_url': 'https://www.zara.com/us/',
-        'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
-        'currency': 'USD'
-      }
-    ];
-    this.state = { view: 'list', recommendations: recommendations };
+    const recommendations = [];
+    this.state = { camara: false, fuente: null, image: '', recommendations: recommendations, view: 'index' }
     this.takePicture = this.takePicture.bind(this);
     this.uploadPicture = this.uploadPicture.bind(this);
     this.openBuy = this.openBuy.bind(this);
-  }
-
-  sendPicture(imageUri) {
-    this.setState({view: 'list'});
-    console.log('Sending pic: ' + imageUri);
-    /*
-    fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        img: imgData,
-        img_key: imgName,
-      })
-    })
-    .then((serverResponse) => {
-      let body = JSON.parse(serverResponse._bodyText);
-      this.setState({ recommendations: body.recommendations})
-    })
-    .catch((err) => (console.log(err)))
-    */
   }
 
   takePicture() {
@@ -93,12 +43,46 @@ export default class Clothy extends Component {
         AlertIOS.alert('Can\'t use camera', 'We invite you to upload a pic ☺️');
         return;
       }
-      ImagePickerIOS.openCameraDialog({}, imageUri => this.sendPicture(imageUri), () => {});
-    });
+
+      ImagePickerIOS.openCameraDialog({}, imageUri => {
+        ImageStore.getBase64ForTag(imageUri, data => {
+          fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              img: data,
+              img_key: (new Date).toDateString + ".jpg",
+            })
+          })
+            .then(serverResponse => {
+              let body = JSON.parse(serverResponse._bodyText);
+              this.setState({ recommendations: body.recommendations, view: 'list' })
+            })
+        }, err => console.log(err));
+      }, err2 => console.log(err2));
+    })
   }
 
   uploadPicture() {
-    ImagePickerIOS.openSelectDialog({}, imageUri => this.sendPicture(imageUri), () => {});
+    ImagePickerIOS.openSelectDialog({}, imageUri => {
+      console.log(imageUri);
+      var photo = {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'main.jpg'
+      }
+      var body = new FormData();
+      body.append('file', photo);
+      fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
+        method: 'put', body: body
+      });
+
+    }, error => {
+      console.log(error);
+    });
   }
 
   showCommunity() {
@@ -123,13 +107,13 @@ export default class Clothy extends Component {
 
         <View style={styles.navbar}>
 
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
 
             <Image source={require('./img/logo.png')} style={styles.logoImage} />
 
           </View>
 
-          <View style={{flex: 1.2}}>
+          <View style={{ flex: 1.2 }}>
 
             <Text style={styles.logoText}>
               Clothy
@@ -139,14 +123,14 @@ export default class Clothy extends Component {
 
         </View>
 
-        { !this.state.camara && <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
+        <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
 
           <View>
 
-            <View src={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-              
+            <View src={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
               <Image source={require('./img/upload.png')} style={styles.uploadImage} />
-            
+
             </View>
 
             <Text style={styles.uploadText}>
@@ -161,10 +145,10 @@ export default class Clothy extends Component {
 
           <View>
 
-            <View src={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-              
+            <View src={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+
               <Image source={require('./img/camera.png')} style={styles.photoImage} />
-            
+
             </View>
 
             <Text style={styles.photoText}>
@@ -173,13 +157,13 @@ export default class Clothy extends Component {
 
           </View>
 
-        </TouchableHighlight>}
+        </TouchableHighlight>
 
         <TouchableHighlight onPress={this.showCommunity} style={styles.helpContainer} underlayColor='#232323'>
 
-          <View style={{flexDirection: 'row'}}>
+          <View style={{ flexDirection: 'row' }}>
 
-            <View style={{flex: 7}}>
+            <View style={{ flex: 7 }}>
 
               <Text style={styles.helpText}>
                 Help others in the community
@@ -187,7 +171,7 @@ export default class Clothy extends Component {
 
             </View>
 
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
 
               <Image source={require('./img/right.png')} style={styles.helpImage} />
 
@@ -206,14 +190,14 @@ export default class Clothy extends Component {
       return (
         <View key={item.id + ''} style={styles.itemContainer}>
 
-          <View style={{flex: 1.4}}>
+          <View style={{ flex: 1.4 }}>
 
-            <Image style={{width: '100%', height: 123}} source={{uri: item.img_url}} />
+            <Image style={{ width: '100%', height: 123 }} source={{ uri: item.img_url }} />
 
           </View>
 
-          <View style={{flex: 3, marginLeft: 10}}>
-          
+          <View style={{ flex: 3, marginLeft: 10 }}>
+
             <Text style={styles.itemText}>{item.title}</Text>
 
             <Text style={styles.itemText}>{item.store}</Text>
@@ -235,13 +219,13 @@ export default class Clothy extends Component {
 
         <View style={styles.navbar}>
 
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
 
             <Image source={require('./img/logo.png')} style={styles.logoImage} />
 
           </View>
 
-          <View style={{flex: 1.2}}>
+          <View style={{ flex: 1.2 }}>
 
             <Text style={styles.logoText}>
               Clothy
@@ -259,7 +243,7 @@ export default class Clothy extends Component {
 
         </View>
 
-        <View style={{flex: 457/667}}>
+        <View style={{ flex: 457 / 667 }}>
 
           {recommendations}
 
@@ -267,9 +251,9 @@ export default class Clothy extends Component {
 
         <TouchableHighlight onPress={this.askCommunity} style={styles.helpContainer} underlayColor='#232323'>
 
-          <View style={{flexDirection: 'row'}}>
+          <View style={{ flexDirection: 'row' }}>
 
-            <View style={{flex: 7}}>
+            <View style={{ flex: 7 }}>
 
               <Text style={styles.helpText}>
                 No results? Ask the community!
@@ -277,7 +261,7 @@ export default class Clothy extends Component {
 
             </View>
 
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
 
               <Image source={require('./img/right.png')} style={styles.helpImage} />
 
@@ -302,11 +286,11 @@ export default class Clothy extends Component {
 }
 
 const styles = StyleSheet.create({
-  container: {height: '100%'},
+  container: { height: '100%' },
 
   navbar: {
     backgroundColor: '#F15F67',
-    flex: 86/667,
+    flex: 86 / 667,
     borderBottomWidth: 2,
     borderBottomColor: '#D03D45',
     flexDirection: 'row'
@@ -327,7 +311,7 @@ const styles = StyleSheet.create({
 
   uploadContainer: {
     backgroundColor: '#EFEFEF',
-    flex: 260/667
+    flex: 260 / 667
   },
   uploadImage: {
     height: 146,
@@ -345,7 +329,7 @@ const styles = StyleSheet.create({
 
   photoContainer: {
     backgroundColor: '#95989A',
-    flex: 260/667
+    flex: 260 / 667
   },
   photoImage: {
     height: 146,
@@ -363,7 +347,7 @@ const styles = StyleSheet.create({
 
   helpContainer: {
     backgroundColor: '#232323',
-    flex: 60/667
+    flex: 60 / 667
   },
   helpText: {
     textAlign: 'left',
@@ -381,7 +365,7 @@ const styles = StyleSheet.create({
   },
 
   headerContainer: {
-    flex: 62/667,
+    flex: 62 / 667,
     backgroundColor: '#FFFFFF'
   },
   headerTitle: {
