@@ -29,7 +29,6 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-
     const recommendations = [
       {
         'id': 1,
@@ -58,9 +57,8 @@ export default class Clothy extends Component {
         'img_url': 'https://s3.amazonaws.com/elasticbeanstalk-us-east-1-090974648229/clothy/IMG_0023.JPG',
         'currency': 'USD'
       }
-    ]
-
-    this.state = { view: 'list', recommendations: recommendations }
+    ];
+    this.state = { view: 'list', recommendations: recommendations };
     this.takePicture = this.takePicture.bind(this);
     this.uploadPicture = this.uploadPicture.bind(this);
     this.openBuy = this.openBuy.bind(this);
@@ -141,7 +139,7 @@ export default class Clothy extends Component {
 
         </View>
 
-        <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
+        { !this.state.camara && <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
 
           <View>
 
@@ -175,7 +173,7 @@ export default class Clothy extends Component {
 
           </View>
 
-        </TouchableHighlight>
+        </TouchableHighlight>}
 
         <TouchableHighlight onPress={this.showCommunity} style={styles.helpContainer} underlayColor='#232323'>
 
