@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {
+  AlertIOS,
   AppRegistry,
   StyleSheet,
   Text,
@@ -8,12 +9,11 @@ import {
   ImagePickerIOS,
   Image,
   CameraRoll,
+  TouchableHighlight
 } from 'react-native';
 
 import Camera from 'react-native-camera';
 import Icon from 'react-native-vector-icons/Entypo';
-
-var ImagePicker = require('react-native-image-picker');
 
 var options = {
   title: 'Upload Photo',
@@ -24,120 +24,217 @@ var options = {
   }
 };
 
-
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
     this.state = { ventana: 'camara', fuente: null, image: '', recommendations: [] }
   }
 
-  takePicture() {
-    this.camera.capture()
-      .then((data) => { })
-      .catch(err => console.error(err));
-  }
-  // componentWillMount() {
-  //   CameraRoll.getPhotos({ first: 5 }).then((response) => (console.log(response))).catch((err) => (console.log(err)))
-  // }
+  sendPicture() {
+    let source = { uri: response.uri };
+    let imgData = response.data;
+    let imgName = response.fileName;
+    this.setState({ fuente: source });
 
+    fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        img: imgData,
+        img_key: imgName,
+      })
+    })
+    .then((serverResponse) => {
+      let body = JSON.parse(serverResponse._bodyText);
+      this.setState({ recommendations: body.recommendations})
+    })
+    .catch((err) => (console.log(err)))
+  }
+
+  takePicture() {
+    ImagePickerIOS.canUseCamera(canUse => {
+      if (!canUse) {
+        AlertIOS.alert('Can\'t use camera', 'We invite you to upload a pic ☺️');
+        return;
+      }
+
+      ImagePickerIOS.openCameraDialog({}, imageUri => {
+        console.log(imageUri);
+      }, error => {
+        console.log(error);
+      });
+    })
+  }
 
   uploadPicture() {
-    ImagePicker.showImagePicker(options, (response) => {
-      console.log('Response = ');
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      }
-      else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      }
-      else {
-        let source = { uri: response.uri };
-        let imgData = response.data;
-        let imgName = response.fileName;
-        this.setState({ fuente: source });
-
-        fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            img: imgData,
-            img_key: imgName,
-          })
-        })
-          .then((serverResponse) => {
-            let body = JSON.parse(serverResponse._bodyText);
-            this.setState({ recommendations: body.recommendations})
-          })
-          .catch((err) => (console.log(err)))
-      }
+    ImagePickerIOS.openSelectDialog({}, imageUri => {
+      console.log(imageUri);
+    }, error => {
+      console.log(error);
     });
-
   }
 
-
+  showCommunity() {
+    console.log('ioasdjaiodjas');
+  }
 
   render() {
     return (
       <View style={styles.container}>
 
-        <Camera
-          ref={(cam) => {
-            this.camera = cam;
-          }}
-          style={styles.preview}
-          aspect={Camera.constants.Aspect.fill}>
-          <Text style={{ marginTop: 20, fontSize: 30, top: -180, color: 'white', backgroundColor: 'transparent' }}>
-            Clothy {this.state.recommendations.length}
-        </Text>
-          <Image
-            style={{ width: 300, height: 300, top: -80 }}
-            source={this.state.fuente}
-          />
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={styles.capture} onPress={this.takePicture.bind(this)}><Icon name="camera" size={30} color="black" /></Text>
-            <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}><Icon name="image" size={30} color="black" /></Text>
-            <Text onPress={this.lastPicture} >Ultima</Text>
+        <View style={styles.navbar}>
+
+          <View style={{flex: 1}}>
+
+            <Image source={require('./img/logo.png')} style={styles.logoImage} />
+
           </View>
-        </Camera>
-      </View >
+
+          <View style={{flex: 1.2}}>
+
+            <Text style={styles.logoText}>
+              Clothy
+            </Text>
+
+          </View>
+
+        </View>
+
+        <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
+
+          <View>
+
+            <Image source={require('./img/upload.png')} style={styles.uploadImage} />
+
+            <Text style={styles.uploadText}>
+              Upload a picture
+            </Text>
+
+          </View>
+
+        </TouchableHighlight>
+
+        <TouchableHighlight onPress={this.takePicture} style={styles.photoContainer} underlayColor='#95989A'>
+
+          <View>
+
+            <Image source={require('./img/camera.png')} style={styles.photoImage} />
+
+            <Text style={styles.photoText}>
+              Take a photo
+            </Text>
+
+          </View>
+
+        </TouchableHighlight>
+
+        <TouchableHighlight onPress={this.showCommunity} style={styles.helpContainer} underlayColor='#232323'>
+
+          <View style={{flexDirection: 'row'}}>
+
+            <View style={{flex: 7}}>
+
+              <Text style={styles.helpText}>
+                Help others in the community
+              </Text>
+
+            </View>
+
+            <View style={{flex: 1}}>
+
+              <Image source={require('./img/right.png')} style={styles.helpImage} />
+
+            </View>
+
+          </View>
+
+        </TouchableHighlight>
+
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+  container: {height: '100%'},
+
+  navbar: {
+    backgroundColor: '#F15F67',
+    flex: 86/667,
+    borderBottomWidth: 2,
+    borderBottomColor: '#D03D45',
+    flexDirection: 'row'
   },
-  welcome: {
+  logoImage: {
+    height: 32,
+    width: 32,
+    marginTop: 33,
+    marginLeft: 128
+  },
+  logoText: {
+    textAlign: 'left',
+    color: '#FFFFFF',
+    fontSize: 24,
+    marginTop: 35,
+    fontFamily: 'Helvetica Neue'
+  },
+
+  uploadContainer: {
+    backgroundColor: '#EFEFEF',
+    flex: 260/667
+  },
+  uploadImage: {
+    height: 146,
+    width: 146,
+    marginTop: 25,
+    marginLeft: 115
+  },
+  uploadText: {
+    textAlign: 'center',
+    color: '#95989A',
+    fontSize: 34,
+    marginTop: 25,
+    fontFamily: 'American Typewriter'
+  },
+
+  photoContainer: {
+    backgroundColor: '#95989A',
+    flex: 260/667
+  },
+  photoImage: {
+    height: 146,
+    width: 146,
+    marginTop: 25,
+    marginLeft: 115
+  },
+  photoText: {
+    textAlign: 'center',
+    color: '#EFEFEF',
+    fontSize: 34,
+    marginTop: 25,
+    fontFamily: 'American Typewriter'
+  },
+
+  helpContainer: {
+    backgroundColor: '#232323',
+    flex: 60/667
+  },
+  helpText: {
+    textAlign: 'left',
+    color: '#EFEFEF',
     fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+    marginTop: 18,
+    marginLeft: 20,
+    fontFamily: 'Helvetica Neue'
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-  preview: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    height: Dimensions.get('window').height,
-    width: Dimensions.get('window').width
-  },
-  capture: {
-    flex: 0,
-    backgroundColor: '#fff',
-    borderRadius: 5,
-    color: '#000',
-    padding: 10,
-    margin: 40
+  helpImage: {
+    height: 28,
+    width: 28,
+    marginTop: 16,
+    marginRight: 25
   }
 });
 
