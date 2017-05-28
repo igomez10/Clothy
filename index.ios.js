@@ -73,9 +73,6 @@ export default class Clothy extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={{ marginTop: 20, fontSize: 30 }}>
-          Clothy
-        </Text>
 
         <Camera
           ref={(cam) => {
@@ -83,8 +80,11 @@ export default class Clothy extends Component {
           }}
           style={styles.preview}
           aspect={Camera.constants.Aspect.fill}>
+          <Text style={{ marginTop: 20, fontSize: 30, top: -180 }}>
+            Clothy
+        </Text>
           <Image
-            style={{ width: 300, height: 300 }}
+            style={{ width: 300, height: 300, top:-80 }}
             source={this.state.fuente}
           />
           <View style={{ flexDirection: 'row' }}>
