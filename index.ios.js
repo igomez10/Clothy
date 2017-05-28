@@ -9,10 +9,10 @@ import {
   Image,
   CameraRoll,
 } from 'react-native';
+
 import Camera from 'react-native-camera';
 
 var ImagePicker = require('react-native-image-picker');
-
 
 var options = {
   title: 'Upload Photo',
@@ -27,7 +27,7 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-    this.state = { ventana: 'camara', fuente: { uri: "http://media-cdn.tripadvisor.com/media/photo-s/0e/85/48/e6/seven-mile-beach-grand.jpg" }, image: '' }
+    this.state = { ventana: 'camara', fuente: null, image: '' }
   }
 
   takePicture() {
@@ -73,23 +73,26 @@ export default class Clothy extends Component {
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
+        <Text style={{ marginTop: 20, fontSize: 30 }}>
           Clothy
         </Text>
-        <Image
-          style={{ width: 50, height: 50 }}
-          source={this.state.fuente}
-        />
+
         <Camera
           ref={(cam) => {
             this.camera = cam;
           }}
           style={styles.preview}
           aspect={Camera.constants.Aspect.fill}>
-          <Text style={styles.capture} onPress={this.takePicture.bind(this)}>[CAPTURE]</Text>
-          <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}>[UPLOAD]</Text>
+          <Image
+            style={{ width: 300, height: 300 }}
+            source={this.state.fuente}
+          />
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={styles.capture} onPress={this.takePicture.bind(this)}>CAPTURE</Text>
+            <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}>UPLOAD</Text>
+          </View>
         </Camera>
-      </View>
+      </View >
     );
   }
 }
