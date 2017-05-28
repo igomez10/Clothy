@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import Camera from 'react-native-camera';
+import Icon from 'react-native-vector-icons/Entypo';
 
 var ImagePicker = require('react-native-image-picker');
 
@@ -32,13 +33,13 @@ export default class Clothy extends Component {
 
   takePicture() {
     this.camera.capture()
-      .then((data) => (this.setState({ fuente: data.path })))
+      .then((data) => {} )
       .catch(err => console.error(err));
   }
 
   uploadPicture() {
     ImagePicker.showImagePicker(options, (response) => {
-      console.log('Response = ', response);
+      console.log('Response = ');
       if (response.didCancel) {
         console.log('User cancelled image picker');
       }
@@ -46,23 +47,23 @@ export default class Clothy extends Component {
         console.log('ImagePicker Error: ', response.error);
       }
       else {
-        let source64 = { uri: 'data:image/jpeg;base64,' + response.data };
         let source = { uri: response.uri };
-
+        let imgData = response.data;
+        let imgName = response.fileName;
+        console.log(imgName);
         this.setState({ fuente: source });
 
-        fetch('http://clothy-dev.us-east-1.elasticbeanstalk.com/recommend', {
+        fetch('http://10.105.168.100:5000/recommend', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            img: "'" + source + "'"
+            img: imgData,
+            img_key: imgName,
           })
-        })
-        // You can also display the image using data:
-        // let source = { uri: 'data:image/jpeg;base64,' + response.data };
+        }).then((serverResponse) => (console.log(serverResponse)))
       }
     });
 
@@ -80,16 +81,16 @@ export default class Clothy extends Component {
           }}
           style={styles.preview}
           aspect={Camera.constants.Aspect.fill}>
-          <Text style={{ marginTop: 20, fontSize: 30, top: -180 }}>
+          <Text style={{ marginTop: 20, fontSize: 30, top: -180, color:'white', backgroundColor:'transparent' }}>
             Clothy
         </Text>
           <Image
-            style={{ width: 300, height: 300, top:-80 }}
+            style={{ width: 300, height: 300, top: -80 }}
             source={this.state.fuente}
           />
           <View style={{ flexDirection: 'row' }}>
-            <Text style={styles.capture} onPress={this.takePicture.bind(this)}>CAPTURE</Text>
-            <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}>UPLOAD</Text>
+            <Text style={styles.capture} onPress={this.takePicture.bind(this)}><Icon name="camera" size={30} color="black" /></Text>
+            <Text style={styles.capture} onPress={this.uploadPicture.bind(this)}><Icon name="image" size={30} color="black" /></Text>
           </View>
         </Camera>
       </View >
