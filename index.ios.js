@@ -27,7 +27,7 @@ var options = {
 export default class Clothy extends Component {
   constructor(props) {
     super(props);
-    this.state = { ventana: 'camara', fuente: null, image: '', recommendations: [] }
+    this.state = { camara: false, fuente: null, image: '', recommendations: [] }
   }
 
   sendPicture() {
@@ -103,7 +103,7 @@ export default class Clothy extends Component {
 
         </View>
 
-        <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
+        { !this.state.camara && <TouchableHighlight onPress={this.uploadPicture} style={styles.uploadContainer} underlayColor='#EFEFEF'>
 
           <View>
 
@@ -129,7 +129,7 @@ export default class Clothy extends Component {
 
           </View>
 
-        </TouchableHighlight>
+        </TouchableHighlight>}
 
         <TouchableHighlight onPress={this.showCommunity} style={styles.helpContainer} underlayColor='#232323'>
 
